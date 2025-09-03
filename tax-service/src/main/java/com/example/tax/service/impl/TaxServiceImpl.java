@@ -1,9 +1,14 @@
 package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
+<<<<<<< HEAD
 import com.core.lib.service.RedisCacheProvider;
+=======
+import com.core.lib.exceptions.InvalidArgumentException;
+>>>>>>> 1507aeaa2f532945e92fc187fc39d93f6b5c2c86
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +24,11 @@ public class TaxServiceImpl implements TaxService {
     private RedisCacheProvider redisCacheProvider;
 
     @Override
-    public TaxRecord calculateTax(String userName, double income) {
+    public TaxRecord calculateTax(String userName, double income) throws InvalidArgumentException {
+
+        if(StringUtils.isEmpty(userName)){
+            throw new InvalidArgumentException("Username is required");
+        }
         double tax;
 
         if (income <= 250000) {
