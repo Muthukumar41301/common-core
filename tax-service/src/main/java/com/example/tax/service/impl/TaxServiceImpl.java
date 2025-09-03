@@ -1,8 +1,10 @@
 package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
+import com.core.lib.exceptions.InvalidArgumentException;
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,11 @@ public class TaxServiceImpl implements TaxService {
     private TaxRecordRepository taxRecordRepository;
 
     @Override
-    public TaxRecord calculateTax(String userName, double income) {
+    public TaxRecord calculateTax(String userName, double income) throws InvalidArgumentException {
+
+        if(StringUtils.isEmpty(userName)){
+            throw new InvalidArgumentException("Username is required");
+        }
         double tax;
 
         if (income <= 250000) {
