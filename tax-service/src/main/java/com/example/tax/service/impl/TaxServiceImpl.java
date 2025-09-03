@@ -1,11 +1,8 @@
 package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
-<<<<<<< HEAD
-import com.core.lib.service.RedisCacheProvider;
-=======
 import com.core.lib.exceptions.InvalidArgumentException;
->>>>>>> 1507aeaa2f532945e92fc187fc39d93f6b5c2c86
+import com.core.lib.service.RedisCacheProvider;
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
 import org.apache.commons.lang3.StringUtils;
