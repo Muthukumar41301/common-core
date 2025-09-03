@@ -1,5 +1,7 @@
 package com.core.lib.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -12,6 +14,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -19,20 +22,46 @@ public class RedisCacheProvider {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final HashOperations<String, String, String> hashOperations;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public RedisCacheProvider(RedisTemplate<String, String> redisTemplate) {
+    public RedisCacheProvider(RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
         this.hashOperations = redisTemplate.opsForHash();
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Serialize object to JSON
+     */
+    private <T> String serialize(T data) {
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (JsonProcessingException ex) {
+            log.error("Error serializing object: {}", ex.getMessage(), ex);
+            throw new RuntimeException("Serialization error", ex);
+        }
+    }
+
+    /**
+     * Deserialize JSON to object
+     */
+    private <T> T deserialize(String json, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(json, clazz);
+        } catch (Exception ex) {
+            log.error("Error deserializing JSON: {}", ex.getMessage(), ex);
+            throw new RuntimeException("Deserialization error", ex);
+        }
     }
 
     /**
      * Add data into Redis hash.
      */
-    public void addData(String hashName, String key, String data) {
+    public <T> void addData(String hashName, String key, T data) {
         try {
             log.info("Adding Data in hashName [{}] for key [{}] into Cache", hashName, key);
-            hashOperations.put(hashName, key, data);
+            hashOperations.put(hashName, key, serialize(data));
         } catch (RedisConnectionFailureException ex) {
             log.error("Redis connection failed while adding data: {}", ex.getMessage(), ex);
             throw ex;
@@ -45,10 +74,11 @@ public class RedisCacheProvider {
     /**
      * Fetch single entry from Redis hash.
      */
-    public Optional<String> getData(String hashName, String key) {
+    public <T> Optional<T> getData(String hashName, String key, Class<T> clazz) {
         try {
             log.debug("Fetching Data using hashName [{}] for key [{}] from Cache", hashName, key);
-            return Optional.ofNullable(hashOperations.get(hashName, key));
+            String json = hashOperations.get(hashName, key);
+            return json != null ? Optional.of(deserialize(json, clazz)) : Optional.empty();
         } catch (Exception ex) {
             log.error("Error fetching data from Redis: {}", ex.getMessage(), ex);
             return Optional.empty();
@@ -58,10 +88,16 @@ public class RedisCacheProvider {
     /**
      * Fetch all entries from Redis hash.
      */
-    public Map<String, String> getAllData(String hashName) {
+    public <T> Map<String, T> getAllData(String hashName, Class<T> clazz) {
         try {
             log.debug("Fetching All Data using hashName [{}] from Cache", hashName);
-            return hashOperations.entries(hashName);
+            Map<String, String> allData = hashOperations.entries(hashName);
+            if (allData == null || allData.isEmpty()) return Collections.emptyMap();
+            return allData.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> deserialize(e.getValue(), clazz)
+                    ));
         } catch (Exception ex) {
             log.error("Error fetching all data from Redis: {}", ex.getMessage(), ex);
             return Collections.emptyMap();
@@ -71,20 +107,21 @@ public class RedisCacheProvider {
     /**
      * Update (same as put) data in Redis hash.
      */
-    public void updateData(String hashName, String key, String data) {
+    public <T> void updateData(String hashName, String key, T data) {
         log.info("Updating Data in hashName [{}] for key [{}] in Cache", hashName, key);
-        addData(hashName, key, data); // reuse addData for consistency
+        addData(hashName, key, data);
     }
 
     /**
      * Delete a key from Redis hash.
      */
-    public void deleteData(String hashName, String key) {
+    public boolean deleteData(String hashName, String key) {
         try {
             log.info("Deleting Data in hashName [{}] for key [{}] in Cache", hashName, key);
-            hashOperations.delete(hashName, key);
+            return hashOperations.delete(hashName, key) > 0;
         } catch (Exception ex) {
             log.error("Error deleting data from Redis: {}", ex.getMessage(), ex);
+            return false;
         }
     }
 
@@ -110,6 +147,18 @@ public class RedisCacheProvider {
             redisTemplate.expire(hashName, ttl);
         } catch (Exception ex) {
             log.error("Error setting expiry on Redis key: {}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Get expiry for a Redis hash.
+     */
+    public Optional<Long> getExpiry(String hashName) {
+        try {
+            return Optional.ofNullable(redisTemplate.getExpire(hashName));
+        } catch (Exception ex) {
+            log.error("Error getting expiry for [{}]: {}", hashName, ex.getMessage(), ex);
+            return Optional.empty();
         }
     }
 

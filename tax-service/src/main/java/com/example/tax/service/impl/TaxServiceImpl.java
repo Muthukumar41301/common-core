@@ -1,16 +1,22 @@
 package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
+import com.core.lib.service.RedisCacheProvider;
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class TaxServiceImpl implements TaxService {
 
     @Autowired
     private TaxRecordRepository taxRecordRepository;
+
+    @Autowired
+    private RedisCacheProvider redisCacheProvider;
 
     @Override
     public TaxRecord calculateTax(String userName, double income) {
@@ -35,6 +41,15 @@ public class TaxServiceImpl implements TaxService {
                 .netIncome(netIncome)
                 .build();
 
-        return taxRecordRepository.save(record);
+        TaxRecord taxRecord= taxRecordRepository.save(record);
+        redisCacheProvider.addData("tax",taxRecord.getUserName(),record);
+        return taxRecord;
     }
+
+    @Override
+    public Optional<TaxRecord> getTaxRecord(String userName) {
+        return redisCacheProvider.getData("tax",userName,TaxRecord.class);
+    }
+
+
 }
