@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.example.tax", "com.core.lib"})
-@EntityScan(basePackages = "com.core.lib")
-@EnableJpaRepositories(basePackages = "com.core.lib")
+@EntityScan(basePackages = {"com.example.tax", "com.core.lib"})
+@EnableJpaRepositories(basePackages = {"com.example.tax", "com.core.lib"})
 public class TaxServiceApplication {
 
 	public static void main(String[] args) {

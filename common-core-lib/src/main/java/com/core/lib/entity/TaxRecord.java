@@ -5,11 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tax-record")
+@Table(name = "tax_record")
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,5 +26,6 @@ public class TaxRecord {
     private double taxAmount;
     private double netIncome;
 
-    private LocalDateTime createdDate = LocalDateTime.now();
+    @CreationTimestamp
+    private LocalDateTime createdDate;
 }
