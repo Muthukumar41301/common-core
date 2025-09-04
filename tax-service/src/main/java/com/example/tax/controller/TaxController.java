@@ -5,6 +5,7 @@ import com.example.tax.service.TaxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -22,5 +23,10 @@ public class TaxController {
     @GetMapping
     public Optional<TaxRecord> getTaxRecord(@RequestParam String userName) {
         return taxService.getTaxRecord(userName);
+    }
+
+    @GetMapping("/list")
+    public List<TaxRecord> getTaxRecords() {
+        return taxService.getTaxRecords();
     }
 }
