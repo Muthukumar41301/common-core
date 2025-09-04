@@ -1,4 +1,4 @@
-package com.core.lib.service;
+package com.core.lib.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -92,7 +92,7 @@ public class RedisCacheProvider {
         try {
             log.debug("Fetching All Data using hashName [{}] from Cache", hashName);
             Map<String, String> allData = hashOperations.entries(hashName);
-            if (allData == null || allData.isEmpty()) return Collections.emptyMap();
+            if (allData.isEmpty()) return Collections.emptyMap();
             return allData.entrySet().stream()
                     .collect(Collectors.toMap(
                             Map.Entry::getKey,
