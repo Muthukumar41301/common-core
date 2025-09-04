@@ -155,7 +155,7 @@ public class RedisCacheProvider {
      */
     public Optional<Long> getExpiry(String hashName) {
         try {
-            return Optional.ofNullable(redisTemplate.getExpire(hashName));
+            return Optional.of(redisTemplate.getExpire(hashName));
         } catch (Exception ex) {
             log.error("Error getting expiry for [{}]: {}", hashName, ex.getMessage(), ex);
             return Optional.empty();

@@ -1,7 +1,7 @@
 package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
-import com.core.lib.exceptions.InvalidArgumentException;
+import com.core.lib.exception.BusinessException;
 import com.core.lib.service.RedisCacheProvider;
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
@@ -21,10 +21,10 @@ public class TaxServiceImpl implements TaxService {
     private RedisCacheProvider redisCacheProvider;
 
     @Override
-    public TaxRecord calculateTax(String userName, double income) throws InvalidArgumentException {
+    public TaxRecord calculateTax(String userName, double income) {
 
         if(StringUtils.isEmpty(userName)){
-            throw new InvalidArgumentException("Username is required");
+            throw new BusinessException("1001","User name cannot be empty");
         }
         double tax;
 
