@@ -2,7 +2,8 @@ package com.example.tax.service.impl;
 
 import com.core.lib.entity.TaxRecord;
 import com.core.lib.exception.BusinessException;
-import com.core.lib.service.RedisCacheProvider;
+
+import com.core.lib.util.RedisCacheProvider;
 import com.example.tax.repository.TaxRecordRepository;
 import com.example.tax.service.TaxService;
 import org.apache.commons.lang3.StringUtils;
